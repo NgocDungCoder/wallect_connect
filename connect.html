@@ -1,41 +1,36 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Connect Wallet</title>
+    <meta charset="utf-8" />
     <script type="module">
-        import SignClient from "https://cdn.skypack.dev/@walletconnect/sign-client";
+      import { EthereumProvider } from "https://unpkg.com/@walletconnect/ethereum-provider@2.8.0/dist/index.umd.js";
 
-        const projectId = "99fa72264e61592374a49f39d41ecbe8"; // 🔑 Thay bằng projectId từ WalletConnect Cloud
+      async function connect() {
+        const provider = await EthereumProvider.init({
+          projectId: "99fa72264e61592374a49f39d41ecbe8", // Thay bằng projectId của bạn
+          chains: [1], // Ethereum mainnet
+          methods: ["eth_sendTransaction", "personal_sign", "eth_signTypedData"],
+          showQrModal: true, // Hiển thị modal chọn ví
+        });
 
-        async function connectWallet() {
-          const client = await SignClient.init({ projectId });
+        await provider.enable(); // Mở modal chọn ví
 
-          const { uri, approval } = await client.connect({
-            requiredNamespaces: {
-              eip155: {
-                methods: ["eth_sendTransaction", "personal_sign", "eth_signTypedData"],
-                chains: ["eip155:1"],
-                events: ["chainChanged", "accountsChanged"],
-              },
-            },
-          });
+        const accounts = await provider.request({ method: "eth_accounts" });
+        const address = accounts[0];
 
-          // Hiển thị QR hoặc mở MetaMask
-          const qrDiv = document.getElementById("qr");
-          qrDiv.innerHTML = `<p>Scan QR with Wallet:</p><pre>${uri}</pre>`;
-
-          const session = await approval();
-          const address = session.namespaces.eip155.accounts[0].split(":")[2];
-
-          // Gửi dữ liệu về Flutter
+        // Gửi địa chỉ về Flutter
+        if (window.flutter_inappwebview) {
           window.flutter_inappwebview.callHandler('onConnected', address);
+        } else {
+          console.log("Flutter handler not found");
         }
+      }
 
-        window.onload = connectWallet;
+      window.onload = connect;
     </script>
-</head>
-<body>
-<h2>WalletConnect v2</h2>
-<div id="qr"></div>
-</body>
+  </head>
+  <body>
+    <h2>Connecting...</h2>
+  </body>
 </html>
