@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Connect Wallet</title>
+    <script type="module">
+        import SignClient from "https://cdn.skypack.dev/@walletconnect/sign-client";
+
+        const projectId = "YOUR_PROJECT_ID"; // 🔑 Thay bằng projectId từ WalletConnect Cloud
+
+        async function connectWallet() {
+          const client = await SignClient.init({ projectId });
+
+          const { uri, approval } = await client.connect({
+            requiredNamespaces: {
+              eip155: {
+                methods: ["eth_sendTransaction", "personal_sign", "eth_signTypedData"],
+                chains: ["eip155:1"],
+                events: ["chainChanged", "accountsChanged"],
+              },
+            },
+          });
+
+          // Hiển thị QR hoặc mở MetaMask
+          const qrDiv = document.getElementById("qr");
+          qrDiv.innerHTML = `<p>Scan QR with Wallet:</p><pre>${uri}</pre>`;
+
+          const session = await approval();
+          const address = session.namespaces.eip155.accounts[0].split(":")[2];
+
+          // Gửi dữ liệu về Flutter
+          window.flutter_inappwebview.callHandler('onConnected', address);
+        }
+
+        window.onload = connectWallet;
+    </script>
+</head>
+<body>
+<h2>WalletConnect v2</h2>
+<div id="qr"></div>
+</body>
+</html>
