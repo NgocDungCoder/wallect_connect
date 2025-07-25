@@ -1,36 +1,40 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Connect Wallet</title>
     <meta charset="utf-8" />
-    <script type="module">
-      import { EthereumProvider } from "https://unpkg.com/@walletconnect/ethereum-provider@2.8.0/dist/index.umd.js";
-
-      async function connect() {
-        const provider = await EthereumProvider.init({
-          projectId: "99fa72264e61592374a49f39d41ecbe8", // Thay bằng projectId của bạn
+    <title>Connect Wallet</title>
+    <script src="https://unpkg.com/@walletconnect/web3modal@2.5.0/dist/index.umd.js"></script>
+    <script src="https://unpkg.com/@walletconnect/ethereum-provider@2.8.0/dist/index.umd.js"></script>
+    <script>
+      async function connectWallet() {
+        const provider = await window.WalletConnectEthereumProvider.init({
+          projectId: "99fa72264e61592374a49f39d41ecbe8",
           chains: [1], // Ethereum mainnet
-          methods: ["eth_sendTransaction", "personal_sign", "eth_signTypedData"],
-          showQrModal: true, // Hiển thị modal chọn ví
+          methods: [
+            "eth_sendTransaction",
+            "personal_sign",
+            "eth_signTypedData"
+          ],
+          showQrModal: true,
         });
 
-        await provider.enable(); // Mở modal chọn ví
+        await provider.enable(); // Show the modal
 
         const accounts = await provider.request({ method: "eth_accounts" });
         const address = accounts[0];
 
-        // Gửi địa chỉ về Flutter
+        // Send back to Flutter
         if (window.flutter_inappwebview) {
           window.flutter_inappwebview.callHandler('onConnected', address);
         } else {
-          console.log("Flutter handler not found");
+          document.body.innerHTML += `<p>Connected: ${address}</p>`;
         }
       }
 
-      window.onload = connect;
+      window.onload = connectWallet;
     </script>
   </head>
   <body>
-    <h2>Connecting...</h2>
+    <h2 style="text-align:center">🔗 Kết nối ví MetaMask...</h2>
   </body>
 </html>
